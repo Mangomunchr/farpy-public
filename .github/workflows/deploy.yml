@@ -7,58 +7,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Build a tiny safe bundle to publish (non-sensitive only)
       - name: Build tiny public bundle
         run: |
           set -euo pipefail
           rm -rf public && mkdir -p public
-          date -u +'%Y-%m-%dT%H:%M:%SZ' | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          date -u +"%FT%TZ" | awk '{print "{ \"ok\":true, \"ts\":\""$1"\" }"}' > public/health.json
           printf "farpy public artifacts (auto-built)\n" > public/README.txt
 
-      # Write private key from secret and print its fingerprint (not secret)
-      - name: Write CI key & show fingerprint
+      - name: Write CI key and show fingerprint
         shell: bash
         run: |
           set -euo pipefail
           umask 077
           mkdir -p ~/.ssh
-          # write the PRIVATE key exactly
+          # write the PRIVATE key from the secret verbatim:
           cat > ~/.ssh/id_ci <<'KEY'
 ${{ secrets.SSH_KEY }}
 KEY
           chmod 600 ~/.ssh/id_ci
-          # show fingerprint of the public half (safe to print)
-          ssh-keygen -y -f ~/.ssh/id_ci | ssh-keygen -lf - -E sha256 | awk '{print "ci-fp="$2}'
+          echo "ci-fp=$(ssh-keygen -y -f ~/.ssh/id_ci | ssh-keygen -lf -E sha256 - | awk '{print $2}')"
 
-      # Prove we can SSH using that key
-      - name: Prove we can SSH (prints ok-from-ci)
+      - name: Try SSH
+        shell: bash
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo ok-from-ci'
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" 'echo ok-from-ci'
 
-      # Ensure remote folder exists with correct owner
-      - name: Ensure remote folder exists
+      - name: Ensure remote folder & upload
+        shell: bash
         run: |
+          set -euo pipefail
           ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'install -d -m 755 -o deploy -g deploy /opt/farpy/public'
-
-      # Upload bundle (server-side perms are already deploy:deploy)
-      - name: Upload bundle
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key:      ${{ secrets.SSH_KEY }}
-          source:   "public/**"
-          target:   "/opt/farpy/public"
-          strip_components: 1
-          overwrite: true
-
-      # Verify on server
-      - name: Verify on server
-        run: |
+          scp -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            -r public/* "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/"
           ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json /opt/farpy/public/README.txt || true'
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            'ls -lah /opt/farpy/public; head -n2 /opt/farpy/public/health.json || true'
