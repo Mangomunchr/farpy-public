@@ -8,19 +8,22 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build tiny public bundle
+        shell: bash
         run: |
           set -euo pipefail
           rm -rf public && mkdir -p public
           date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           echo "farpy public artifacts (auto-built)" > public/README.txt
+          # optional: uncomment to also ship run info:
+          # echo "{\"run\":\"${GITHUB_RUN_ID}\",\"ts\":\"$(date -u +%FT%TZ)\"}" > public/version.json
 
       - name: SCP bundle to server (SFTP-only key)
         uses: appleboy/scp-action@v0.1.7
         with:
-          host:     ${{ secrets.SSH_HOST }}      # 95.217.226.184
-          username: ${{ secrets.SSH_USER }}      # deploy
-          key:      ${{ secrets.SSH_KEY }}       # the PRIVATE key (multiline OK)
-          source:   "public/**"
-          target:   "/opt/farpy/public"
+          host:      ${{ secrets.SSH_HOST }}      # 95.217.226.184
+          username:  ${{ secrets.SSH_USER }}      # deploy
+          key:       ${{ secrets.SSH_KEY }}       # the PRIVATE key (multiline OK)
+          source:    "public/**"
+          target:    "/opt/farpy/public"
           strip_components: 1
           overwrite: true
