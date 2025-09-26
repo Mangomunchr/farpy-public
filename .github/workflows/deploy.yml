@@ -1,4 +1,3 @@
-# .github/workflows/deploy.yml
 name: farpy-deploy
 on: workflow_dispatch
 
@@ -6,37 +5,55 @@ jobs:
   ship:
     runs-on: ubuntu-latest
     steps:
-      - name: Build tiny public bundle
+      - name: Build tiny public bundle (safe)
         run: |
           set -euo pipefail
           rm -rf public && mkdir -p public
           date -u +'%FT%TZ' | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           printf "farpy public artifacts (auto-built)\n" > public/README.txt
+          ls -lah public && echo "-----" && head -n2 public/health.json
 
-      - name: Write SSH key from secret
+      - name: Write SSH key from secret (exact)
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
         run: |
           set -euo pipefail
-          printf '%s\n' "${{ secrets.SSH_KEY }}" > id_ed25519
+          umask 077
+          # write the private key *exactly* as provided
+          printf '%s' "$SSH_PRIVATE_KEY" > id_ed25519
           chmod 600 id_ed25519
+          # derive public key so we can compare fingerprints safely (no secrets)
+          ssh-keygen -y -f id_ed25519 > id_ed25519.pub
+          echo "Runner public key (compare to server authorized_keys):"
+          cat id_ed25519.pub
+          echo "Runner key fingerprint:"
+          ssh-keygen -lf id_ed25519.pub
 
-      - name: Prove we can SSH (prints: ok-from-ci)
+      - name: First contact (accept server host key)
         run: |
+          set -x
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo ok-from-ci'
 
-      - name: Ensure remote folder exists (owned by deploy)
+      - name: Verbose SSH (if previous step fails, these logs will show why)
+        if: failure()
+        run: |
+          ssh -vvv -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo ok-from-ci'
+
+      - name: Ensure /opt/farpy/public exists and is owned so scp works
         run: |
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'install -d -m 755 /opt/farpy/public'
+            'install -d -m 755 /opt/farpy/public && ls -ld /opt/farpy/public'
 
-      - name: Upload the bundle
+      - name: Upload bundle (verbose)
         run: |
-          scp -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
-            public/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/
+          scp -vvv -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            -r public/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/
 
       - name: Verify on server
         run: |
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json || true'
+            'ls -lah /opt/farpy/public && echo "----" && head -n3 /opt/farpy/public/health.json || true'
