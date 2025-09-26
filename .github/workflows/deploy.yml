@@ -1,23 +1,20 @@
 name: farpy-deploy
-on: [workflow_dispatch, push]
-
+on: [workflow_dispatch]
 jobs:
-  deploy:
+  ship:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Build sanitized artifacts (no secrets)
-      - name: Build sanitized public files
-        run: bash scripts/make-public.sh
-
-      # Optional: mask known secrets if you ever echo them
-      - run: |
+      - name: Mask secrets in logs
+        run: |
           echo "::add-mask::${{ secrets.HEALTH_KEY }}"
           echo "::add-mask::${{ secrets.FRONTEND_KEY }}"
 
-      # Copy sanitized artifacts to the host
-      - name: Ship public/
+      - name: Build sanitized bundle
+        run: bash scripts/make_public.sh
+
+      - name: SCP bundle to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host:     ${{ secrets.SSH_HOST }}
