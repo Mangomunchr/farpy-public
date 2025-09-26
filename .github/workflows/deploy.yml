@@ -1,46 +1,32 @@
 name: farpy-deploy
-on:
-  workflow_dispatch:
-
+on: workflow_dispatch
 jobs:
   ship:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout (repo only holds workflow)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Tiny bundle we are allowed to publish (no secrets)
+      # Optional masking so keys never appear in logs
+      - name: Mask secrets
+        run: |
+          echo "::add-mask::${{ secrets.HEALTH_KEY }}"
+          echo "::add-mask::${{ secrets.FRONTEND_KEY }}"
+
       - name: Build sanitized bundle
         run: |
           set -euo pipefail
           rm -rf public && mkdir -p public
-          date -u +%FT%TZ | awk '{print "{ \"ok\": true, \"ts\":\""$1"\" }"}' > public/health.json
-          printf "farpy public artifacts (auto-built)\n" > public/README.txt
+          # non-sensitive payload only
+          date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          echo "farpy public artifacts (auto-built)" > public/README.txt
 
-      # Quick SSH smoke so logs clearly show whether auth works
-      - name: SSH smoke
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host:            ${{ secrets.SSH_HOST }}
-          username:        ${{ secrets.SSH_USER }}
-          key:             ${{ secrets.SSH_KEY }}
-          host_fingerprint:${{ secrets.SSH_FINGERPRINT }}
-          script: |
-            set -e
-            echo "ok from $HOSTNAME as $(whoami)"
-            mkdir -p /opt/farpy/public
-            ls -lah /opt/farpy/public
-
-      # Copy the bundle to the server
       - name: SCP bundle to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host:            ${{ secrets.SSH_HOST }}
-          username:        ${{ secrets.SSH_USER }}
-          key:             ${{ secrets.SSH_KEY }}
-          host_fingerprint:${{ secrets.SSH_FINGERPRINT }}
-          source:          "public/*"
-          target:          "/opt/farpy/public"
-          overwrite:       true
-          strip_components: 0
-          debug:           true
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key:      ${{ secrets.SSH_KEY }}  # multi-line OpenSSH private key secret
+          source:   "public/**"
+          target:   "/opt/farpy/public"
+          strip_components: 1
+          overwrite: true
