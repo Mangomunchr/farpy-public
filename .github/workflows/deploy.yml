@@ -1,12 +1,14 @@
 name: farpy-deploy
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+
 jobs:
   ship:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Mask secrets in logs
+      - name: Mask secrets (so they never show in logs)
         run: |
           echo "::add-mask::${{ secrets.HEALTH_KEY }}"
           echo "::add-mask::${{ secrets.FRONTEND_KEY }}"
