@@ -7,41 +7,37 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Optional: hide secrets even if printed
-      - name: Mask secrets (so they never show in logs)
+      # Build a tiny, strictly non-sensitive bundle
+      - name: Build sanitized bundle
         run: |
-          echo "::add-mask::${{ secrets.HEALTH_KEY }}"
-          echo "::add-mask::${{ secrets.FRONTEND_KEY }}"
+          set -euxo pipefail
+          rm -rf public
+          mkdir -p public
+          date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          printf "farpy public artifacts (auto-built)\n" > public/README.txt
+          ls -lah public
 
-      # 0) SSH smoke test using the CI key
-      - name: SSH smoke
+      # Quick SSH smoke as the 'deploy' user
+      - name: SSH smoke (whoami + list /opt/farpy/public)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host:     ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key:      ${{ secrets.SSH_KEY }}
           script: |
-            echo "ok from $(hostname) as $(whoami)"
-            mkdir -p /opt/farpy/public/.probe
-            ls -al /opt/farpy/public
+            set -euxo pipefail
+            whoami
+            ls -lah /opt/farpy/public || true
 
-      # 1) Build tiny safe bundle locally in the runner
-      - name: Build sanitized bundle
-        run: |
-          set -euo pipefail
-          rm -rf public && mkdir -p public
-          date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{ \"ok\":true, \"ts\":\""$0"\" }"}' > public/health.json
-          printf "farpy public artifacts (auto-built)\n" > public/README.txt
-
-      # 2) Copy bundle to server as deploy
+      # Copy the bundle; drop the leading "public/" and overwrite
       - name: SCP bundle to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host:     ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key:      ${{ secrets.SSH_KEY }}
-          source:   "public/**"
+          source:   "public/*"
           target:   "/opt/farpy/public"
-          strip_components: 1
           overwrite: true
+          strip_components: 1
           debug: true
