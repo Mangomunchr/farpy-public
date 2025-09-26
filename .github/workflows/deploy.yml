@@ -1,32 +1,42 @@
+# .github/workflows/deploy.yml
 name: farpy-deploy
 on: workflow_dispatch
+
 jobs:
   ship:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      # Optional masking so keys never appear in logs
-      - name: Mask secrets
-        run: |
-          echo "::add-mask::${{ secrets.HEALTH_KEY }}"
-          echo "::add-mask::${{ secrets.FRONTEND_KEY }}"
-
-      - name: Build sanitized bundle
+      - name: Build tiny public bundle
         run: |
           set -euo pipefail
           rm -rf public && mkdir -p public
-          # non-sensitive payload only
-          date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
-          echo "farpy public artifacts (auto-built)" > public/README.txt
+          date -u +'%FT%TZ' | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          printf "farpy public artifacts (auto-built)\n" > public/README.txt
 
-      - name: SCP bundle to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:     ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key:      ${{ secrets.SSH_KEY }}  # multi-line OpenSSH private key secret
-          source:   "public/**"
-          target:   "/opt/farpy/public"
-          strip_components: 1
-          overwrite: true
+      - name: Write SSH key from secret
+        run: |
+          set -euo pipefail
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > id_ed25519
+          chmod 600 id_ed25519
+
+      - name: Prove we can SSH (prints: ok-from-ci)
+        run: |
+          ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo ok-from-ci'
+
+      - name: Ensure remote folder exists (owned by deploy)
+        run: |
+          ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            'install -d -m 755 /opt/farpy/public'
+
+      - name: Upload the bundle
+        run: |
+          scp -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
+            public/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/
+
+      - name: Verify on server
+        run: |
+          ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json || true'
