@@ -7,55 +7,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # (optional) mask just in case they ever appear in logs
-      - name: Mask
-        run: |
-          echo "::add-mask::${{ secrets.HEALTH_KEY }}"
-          echo "::add-mask::${{ secrets.FRONTEND_KEY }}"
-
       - name: Build tiny public bundle
         run: |
           set -euo pipefail
           rm -rf public && mkdir -p public
-          date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
-          printf "farpy public artifacts (auto-built)\n" > public/README.txt
+          date -u +"%Y-%m-%dT%H:%M:%SZ" \
+            | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          echo "farpy public artifacts (auto-built)" > public/README.txt
 
-      - name: Write CI SSH key (exact)
-        shell: bash
+      - name: Upload with SFTP (restricted key)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY:  ${{ secrets.SSH_KEY }}
         run: |
           set -euo pipefail
           umask 077
           mkdir -p ~/.ssh
-          cat > ~/.ssh/id_ci <<'KEY'
-          ${{ secrets.SSH_KEY }}
-          KEY
+          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_ci
           chmod 600 ~/.ssh/id_ci
+          # server forces CWD to /opt/farpy/public via authorized_keys
+          sftp -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_ci -b - "$SSH_USER@$SSH_HOST" <<'SFTP'
+          -mkdir public
+          -chmod 755 public
+          put -r public/*
+          SFTP
 
-          # Show fingerprint of the private key’s public half (must match server)
-          ssh-keygen -yf ~/.ssh/id_ci | ssh-keygen -lf - -E sha256 | awk '{print "ci-fp="$2}'
-
-      - name: Prove we can SSH (prints ok-from-ci)
+      - name: Verify via HTTP
         run: |
-          set -euo pipefail
-          ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            -l "${{ secrets.SSH_USER }}" "${{ secrets.SSH_HOST }}" 'echo ok-from-ci'
-
-      - name: Ensure /opt/farpy/public exists (deploy owns it)
-        run: |
-          set -euo pipefail
-          ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            -l "${{ secrets.SSH_USER }}" "${{ secrets.SSH_HOST }}" \
-            'install -d -m 755 -o deploy -g deploy /opt/farpy/public'
-
-      - name: Upload the bundle (scp)
-        run: |
-          set -euo pipefail
-          scp -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
-            public/* "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/"
-
-      - name: Verify on server
-        run: |
-          set -euo pipefail
-          ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            -l "${{ secrets.SSH_USER }}" "${{ secrets.SSH_HOST }}" \
-            'ls -lah /opt/farpy/public && head -n1 /opt/farpy/public/health.json'
+          curl -sS https://api.farpy.com/public/README.txt | head -n1
+          curl -sS https://api.farpy.com/public/health.json | head -n1
