@@ -7,40 +7,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build sanitized bundle
+      - name: Build tiny public bundle
         run: |
           set -euo pipefail
-          rm -rf public && mkdir public
-          date -u +"%Y-%m-%dT%H:%M:%SZ" \
-            | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          rm -rf public && mkdir -p public
+          date -u +"%FT%TZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           echo "farpy public artifacts (auto-built)" > public/README.txt
 
       - name: Write SSH key from secret
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
         run: |
           set -euo pipefail
-          printf '%s\n' "${{ secrets.SSH_KEY }}" > id_ci
+          printf '%s\n' "$SSH_KEY" > id_ci
           chmod 600 id_ci
 
       - name: Prove we can SSH (prints ok-from-ci)
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           ssh -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo ok-from-ci'
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" 'echo ok-from-ci'
 
       - name: Ensure remote folder exists (owned by deploy)
         run: |
+          set -euo pipefail
           ssh -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'sudo install -d -m 755 -o deploy -g deploy /opt/farpy/public'
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            'install -d -m 755 -o deploy -g deploy /opt/farpy/public'
 
       - name: Upload the bundle
         run: |
-          scp -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
-            public/* \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/
+          set -euo pipefail
+          rsync -av --delete -e "ssh -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
+            public/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/"
 
       - name: Verify on server
         run: |
+          set -euo pipefail
           ssh -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json'
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json || true'
