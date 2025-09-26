@@ -14,16 +14,38 @@ jobs:
           rm -rf public && mkdir -p public
           date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           echo "farpy public artifacts (auto-built)" > public/README.txt
-          # optional: uncomment to also ship run info:
-          # echo "{\"run\":\"${GITHUB_RUN_ID}\",\"ts\":\"$(date -u +%FT%TZ)\"}" > public/version.json
 
-      - name: SCP bundle to server (SFTP-only key)
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:      ${{ secrets.SSH_HOST }}      # 95.217.226.184
-          username:  ${{ secrets.SSH_USER }}      # deploy
-          key:       ${{ secrets.SSH_KEY }}       # the PRIVATE key (multiline OK)
-          source:    "public/**"
-          target:    "/opt/farpy/public"
-          strip_components: 1
-          overwrite: true
+      - name: Write SSH key from secret
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p ~/.ssh
+          cat > ~/.ssh/id_ci <<'KEY'
+${{ secrets.SSH_KEY }}
+KEY
+          chmod 600 ~/.ssh/id_ci
+
+      - name: Upload via SFTP (works with ForceCommand internal-sftp)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # create the folder (ok if it already exists)
+          ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'install -d -m 755 -o deploy -g deploy /opt/farpy/public'
+
+          # push everything in public/ to /opt/farpy/public using SFTP
+          # -b - reads commands from stdin
+          {
+            echo "cd /opt/farpy/public"
+            echo "put -r public/*"
+            echo "ls -l"
+          } | sftp -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+
+      - name: Verify over HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sS https://api.farpy.com/public/README.txt | head -n 1
+          curl -sS https://api.farpy.com/public/health.json | head -n 1
