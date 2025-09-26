@@ -22,23 +22,39 @@ jobs:
           chmod 600 id_ed25519
 
       - name: Prove we can SSH (prints ok-from-ci)
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
         run: |
-          set -x
+          set -euxo pipefail
+          test -n "$HOST" && test -n "$USER"
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo ok-from-ci'
+            -l "$USER" "$HOST" 'echo ok-from-ci'
 
       - name: Ensure remote folder exists
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
         run: |
+          set -euxo pipefail
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'install -d -m 755 /opt/farpy/public'
+            -l "$USER" "$HOST" 'install -d -m 755 /opt/farpy/public'
 
       - name: Upload the bundle
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
         run: |
+          set -euxo pipefail
           scp -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
-            public/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/
+            public/* "$USER@$HOST:/opt/farpy/public/"
 
       - name: Verify on server
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
         run: |
+          set -euxo pipefail
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            -l "$USER" "$HOST" \
             'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json || true'
