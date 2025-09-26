@@ -1,24 +1,20 @@
 name: farpy-deploy
-on:
-  workflow_dispatch:
-
+on: workflow_dispatch
 jobs:
   ship:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Mask secrets so they never show in logs (optional but nice)
+      # Hide secrets if they ever echo
       - name: Mask secrets
         run: |
           echo "::add-mask::${{ secrets.HEALTH_KEY }}"
           echo "::add-mask::${{ secrets.FRONTEND_KEY }}"
 
-      # Build a tiny public bundle we can safely upload
       - name: Build sanitized bundle
         run: bash scripts/make_public.sh
 
-      # Copy the bundle to the server using the 'deploy' account
       - name: SCP bundle to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -27,6 +23,5 @@ jobs:
           key:      ${{ secrets.SSH_KEY }}
           source:   "public/**"
           target:   "/opt/farpy/public"
-          overwrite: true
           strip_components: 1
-          debug: true
+          overwrite: true
