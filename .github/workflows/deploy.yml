@@ -5,59 +5,42 @@ jobs:
   ship:
     runs-on: ubuntu-latest
     steps:
-      - name: Build tiny public bundle
+      - uses: actions/checkout@v4
+
+      - name: Build sanitized bundle
         run: |
           set -euo pipefail
-          rm -rf public && mkdir -p public
-          date -u +'%FT%TZ' | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
-          printf "farpy public artifacts (auto-built)\n" > public/README.txt
+          rm -rf public && mkdir public
+          date -u +"%Y-%m-%dT%H:%M:%SZ" \
+            | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          echo "farpy public artifacts (auto-built)" > public/README.txt
 
       - name: Write SSH key from secret
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
-        run: |
-          set -euo pipefail; umask 077
-          printf '%s' "$SSH_PRIVATE_KEY" > id_ed25519
-          chmod 600 id_ed25519
-
-      - name: Normalize USER/HOST and show safe diagnostics
-        env:
-          HOST_RAW: ${{ secrets.SSH_HOST }}
-          USER_RAW: ${{ secrets.SSH_USER }}
         run: |
           set -euo pipefail
-          # strip CR, leading/trailing whitespace
-          HOST=$(printf '%s' "$HOST_RAW" | tr -d '\r' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-          USER=$(printf '%s' "$USER_RAW" | tr -d '\r' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
-          # export for later steps
-          echo "HOST=$HOST" >> "$GITHUB_ENV"
-          echo "USER=$USER" >> "$GITHUB_ENV"
-          # safe debug (length + hex – secrets themselves are not printed)
-          echo "HOST_len=$(printf '%s' "$HOST" | wc -c)"
-          echo "USER_len=$(printf '%s' "$USER" | wc -c)"
-          echo "HOST_hex=$(printf '%s' "$HOST" | od -An -t x1 | tr -d ' \n')"
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > id_ci
+          chmod 600 id_ci
 
       - name: Prove we can SSH (prints ok-from-ci)
         run: |
           set -euxo pipefail
-          test -n "$HOST" && test -n "$USER"
-          ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            -l "$USER" "$HOST" 'echo ok-from-ci'
+          ssh -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'echo ok-from-ci'
 
-      - name: Ensure remote folder exists
+      - name: Ensure remote folder exists (owned by deploy)
         run: |
-          set -euxo pipefail
-          ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            -l "$USER" "$HOST" 'install -d -m 755 /opt/farpy/public'
+          ssh -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            'sudo install -d -m 755 -o deploy -g deploy /opt/farpy/public'
 
       - name: Upload the bundle
         run: |
-          set -euxo pipefail
-          scp -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
-            public/* "$USER@$HOST:/opt/farpy/public/"
+          scp -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
+            public/* \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/farpy/public/
 
       - name: Verify on server
         run: |
-          set -euxo pipefail
-          ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            -l "$USER" "$HOST" 'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json || true'
+          ssh -i id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json'
