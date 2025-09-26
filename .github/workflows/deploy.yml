@@ -16,15 +16,28 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
         run: |
-          set -euo pipefail
-          umask 077
+          set -euo pipefail; umask 077
           printf '%s' "$SSH_PRIVATE_KEY" > id_ed25519
           chmod 600 id_ed25519
 
-      - name: Prove we can SSH (prints ok-from-ci)
+      - name: Normalize USER/HOST and show safe diagnostics
         env:
-          HOST: ${{ secrets.SSH_HOST }}
-          USER: ${{ secrets.SSH_USER }}
+          HOST_RAW: ${{ secrets.SSH_HOST }}
+          USER_RAW: ${{ secrets.SSH_USER }}
+        run: |
+          set -euo pipefail
+          # strip CR, leading/trailing whitespace
+          HOST=$(printf '%s' "$HOST_RAW" | tr -d '\r' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+          USER=$(printf '%s' "$USER_RAW" | tr -d '\r' | sed -E 's/^[[:space:]]+|[[:space:]]+$//g')
+          # export for later steps
+          echo "HOST=$HOST" >> "$GITHUB_ENV"
+          echo "USER=$USER" >> "$GITHUB_ENV"
+          # safe debug (length + hex – secrets themselves are not printed)
+          echo "HOST_len=$(printf '%s' "$HOST" | wc -c)"
+          echo "USER_len=$(printf '%s' "$USER" | wc -c)"
+          echo "HOST_hex=$(printf '%s' "$HOST" | od -An -t x1 | tr -d ' \n')"
+
+      - name: Prove we can SSH (prints ok-from-ci)
         run: |
           set -euxo pipefail
           test -n "$HOST" && test -n "$USER"
@@ -32,29 +45,19 @@ jobs:
             -l "$USER" "$HOST" 'echo ok-from-ci'
 
       - name: Ensure remote folder exists
-        env:
-          HOST: ${{ secrets.SSH_HOST }}
-          USER: ${{ secrets.SSH_USER }}
         run: |
           set -euxo pipefail
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
             -l "$USER" "$HOST" 'install -d -m 755 /opt/farpy/public'
 
       - name: Upload the bundle
-        env:
-          HOST: ${{ secrets.SSH_HOST }}
-          USER: ${{ secrets.SSH_USER }}
         run: |
           set -euxo pipefail
           scp -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -r \
             public/* "$USER@$HOST:/opt/farpy/public/"
 
       - name: Verify on server
-        env:
-          HOST: ${{ secrets.SSH_HOST }}
-          USER: ${{ secrets.SSH_USER }}
         run: |
           set -euxo pipefail
           ssh -i id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            -l "$USER" "$HOST" \
-            'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json || true'
+            -l "$USER" "$HOST" 'ls -lah /opt/farpy/public && head -n3 /opt/farpy/public/health.json || true'
