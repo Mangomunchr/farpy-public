@@ -11,29 +11,16 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf public && mkdir -p public
-          date -u +"%Y-%m-%dT%H:%M:%SZ" \
-            | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
+          date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           echo "farpy public artifacts (auto-built)" > public/README.txt
 
-      - name: Upload with SFTP (restricted key)
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_KEY:  ${{ secrets.SSH_KEY }}
-        run: |
-          set -euo pipefail
-          umask 077
-          mkdir -p ~/.ssh
-          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_ci
-          chmod 600 ~/.ssh/id_ci
-          # server forces CWD to /opt/farpy/public via authorized_keys
-          sftp -o StrictHostKeyChecking=accept-new -i ~/.ssh/id_ci -b - "$SSH_USER@$SSH_HOST" <<'SFTP'
-          -mkdir public
-          -chmod 755 public
-          put -r public/*
-          SFTP
-
-      - name: Verify via HTTP
-        run: |
-          curl -sS https://api.farpy.com/public/README.txt | head -n1
-          curl -sS https://api.farpy.com/public/health.json | head -n1
+      - name: SCP bundle to server (SFTP-only key)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SSH_HOST }}      # 95.217.226.184
+          username: ${{ secrets.SSH_USER }}      # deploy
+          key:      ${{ secrets.SSH_KEY }}       # the PRIVATE key (multiline OK)
+          source:   "public/**"
+          target:   "/opt/farpy/public"
+          strip_components: 1
+          overwrite: true
