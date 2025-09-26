@@ -1,0 +1,8 @@
+.env
+**/*.pem
+**/*.key
+**/.pm2
+/opt/**
+/etc/**
+/var/log/**
+!public/**
