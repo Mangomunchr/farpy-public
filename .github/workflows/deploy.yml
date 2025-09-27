@@ -45,12 +45,9 @@ jobs:
           USER: ${{ secrets.SSH_USER }}
         run: |
           set -euo pipefail
-          # Ensure remote folder exists (works with internal-sftp)
-          ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$USER@$HOST" \
-            'install -d -m 755 -o deploy -g deploy /opt/farpy/public'
-          # Push everything from ./public to /opt/farpy/public (recursive, preserve times)
+          # Your deploy key is forced to internal-sftp with -d /opt/farpy/public
+          # So just change LOCAL dir and push recursively.
           printf "%s\n" \
-            "cd /opt/farpy/public" \
             "lcd public" \
             "put -Pr *" \
             "quit" \
