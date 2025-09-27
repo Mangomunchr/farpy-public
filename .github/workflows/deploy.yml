@@ -19,8 +19,12 @@ jobs:
 
       - name: Install deps & build
         run: |
-          npm ci
+          npm install
           npm run build
+
+      - name: Ensure health.json exists
+        run: |
+          echo "{\"ok\":true,\"ts\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > build/health.json
 
       - name: Upload artifacts to server
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
