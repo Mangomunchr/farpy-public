@@ -42,4 +42,3 @@ jobs:
           local_path: build/*
           remote_path: /opt/farpy/public
           sftp_only: true
-          force_upload: true
