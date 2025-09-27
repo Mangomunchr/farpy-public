@@ -18,7 +18,6 @@ jobs:
           rm -rf public && mkdir -p public
           date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           echo "farpy public artifacts (auto-built)" > public/README.txt
-          ls -l public
 
       - name: Write SSH key from secret
         shell: bash
@@ -26,26 +25,22 @@ jobs:
           set -euo pipefail
           umask 077
           mkdir -p ~/.ssh
-          printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ci
+          cat > ~/.ssh/id_ci <<'KEY'
+          ${{ secrets.SSH_KEY }}
+          KEY
           chmod 600 ~/.ssh/id_ci
 
-      - name: Upload with SFTP (no shell, no legacy scp)
+      - name: Upload with SFTP (ForceCommand-safe)
         shell: bash
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
         run: |
           set -euo pipefail
-          printf '%s\n' \
-            "put -p public/README.txt" \
-            "put -p public/health.json" \
-            "ls -l" \
-          | sftp -vv -b - \
-              -i ~/.ssh/id_ci \
-              -o IdentitiesOnly=yes \
-              -o StrictHostKeyChecking=accept-new \
-              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
-
-      - name: Verify over HTTP
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -sS https://api.farpy.com/public/README.txt | head -n 1
-          curl -sS https://api.farpy.com/public/health.json | head -n 1
+          cat > batch.txt <<'B'
+          cd /opt/farpy/public
+          put -p public/README.txt
+          put -p public/health.json
+          ls -l
+          B
+          sftp -b batch.txt -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$USER@$HOST"
