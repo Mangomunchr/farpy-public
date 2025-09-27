@@ -19,11 +19,14 @@ jobs:
 
       - name: Install deps & build
         run: |
+          ls -lah
+          cat package.json | head -n 20
           npm install
           npm run build
 
       - name: Ensure health.json exists
         run: |
+          mkdir -p build
           echo "{\"ok\":true,\"ts\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > build/health.json
 
       - name: Upload artifacts to server
