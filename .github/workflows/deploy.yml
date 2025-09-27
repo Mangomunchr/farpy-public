@@ -21,26 +21,25 @@ jobs:
           set -euo pipefail
           umask 077
           mkdir -p ~/.ssh
-          # write the *multiline* OpenSSH key exactly as stored in the secret
+          # write the PRIVATE key exactly as stored in the secret
           printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ci
           chmod 600 ~/.ssh/id_ci
 
-      - name: Upload via SFTP (ForceCommand-safe)
+      - name: Upload via SFTP (no SSH commands)
         shell: bash
         run: |
           set -euo pipefail
-          # ensure target folder (owned by deploy)
-          ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            'install -d -m 755 -o deploy -g deploy /opt/farpy/public'
-
-          # send the files using SFTP (not SCP)
+          # SFTP batch: make dir (ok if exists), cd, upload, list
           {
+            echo "mkdir /opt/farpy/public"
             echo "cd /opt/farpy/public"
             echo "put -r public/*"
             echo "ls -l"
-          } | sftp -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
-              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
+          } | sftp -b - \
+               -i ~/.ssh/id_ci \
+               -o IdentitiesOnly=yes \
+               -o StrictHostKeyChecking=accept-new \
+               "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
 
       - name: Verify over HTTP
         shell: bash
