@@ -1,6 +1,11 @@
 name: farpy-deploy
 on: workflow_dispatch
 
+# stop duplicate runs spamming
+concurrency:
+  group: farpy-deploy
+  cancel-in-progress: true
+
 jobs:
   ship:
     runs-on: ubuntu-latest
@@ -21,20 +26,18 @@ jobs:
           set -euo pipefail
           umask 077
           mkdir -p ~/.ssh
-          # write the PRIVATE key exactly as stored in the secret
           printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ci
           chmod 600 ~/.ssh/id_ci
 
-      - name: Upload via SFTP (no SSH commands)
+      - name: Upload via SFTP (ForceCommand-safe)
         shell: bash
         run: |
           set -euo pipefail
-          # SFTP batch: make dir (ok if exists), cd, upload, list
+          # we are chrooted to /opt/farpy/public already; remote root is "/"
           {
-            echo "mkdir /opt/farpy/public"
-            echo "cd /opt/farpy/public"
-            echo "put -r public/*"
-            echo "ls -l"
+            echo "lcd public"   # switch local dir to public/
+            echo "put -r *"     # push everything in public/ into remote "."
+            echo "ls -l"        # show what ended up there
           } | sftp -b - \
                -i ~/.ssh/id_ci \
                -o IdentitiesOnly=yes \
