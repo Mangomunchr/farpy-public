@@ -29,22 +29,18 @@ jobs:
           printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ci
           chmod 600 ~/.ssh/id_ci
 
-      # ---- Simple, ForceCommand-safe upload ----
-      - name: Upload with scp over SFTP (-O)
+      # NOTE: NO "-O" FLAG. Default scp uses SFTP on OpenSSH 9.x.
+      - name: Upload with scp (SFTP mode)
         shell: bash
         run: |
           set -euo pipefail
-          set -x
-          # show openssh version (for -O support)
           ssh -V
-
-          # remote chroot is /opt/farpy/public, so ":" is the right place
-          scp -v -O \
+          scp -v \
             -i ~/.ssh/id_ci \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=accept-new \
             public/README.txt "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"
-          scp -v -O \
+          scp -v \
             -i ~/.ssh/id_ci \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=accept-new \
