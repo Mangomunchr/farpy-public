@@ -1,9 +1,16 @@
 name: farpy-deploy
-on: workflow_dispatch
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: farpy-deploy
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   ship:
@@ -18,6 +25,7 @@ jobs:
           rm -rf public && mkdir -p public
           date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           echo "farpy public artifacts (auto-built)" > public/README.txt
+          ls -l public
 
       - name: Write SSH key from secret
         shell: bash
@@ -37,10 +45,20 @@ jobs:
           USER: ${{ secrets.SSH_USER }}
         run: |
           set -euo pipefail
-          cat > batch.txt <<'B'
-          cd /opt/farpy/public
-          put -p public/README.txt
-          put -p public/health.json
-          ls -l
-          B
-          sftp -b batch.txt -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$USER@$HOST"
+          # Ensure remote folder exists (works with internal-sftp)
+          ssh -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$USER@$HOST" \
+            'install -d -m 755 -o deploy -g deploy /opt/farpy/public'
+          # Push everything from ./public to /opt/farpy/public (recursive, preserve times)
+          printf "%s\n" \
+            "cd /opt/farpy/public" \
+            "lcd public" \
+            "put -Pr *" \
+            "quit" \
+            | sftp -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$USER@$HOST"
+
+      - name: Verify over HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sS https://api.farpy.com/public/README.txt | head -n1
+          curl -sS https://api.farpy.com/public/health.json | head -n1
