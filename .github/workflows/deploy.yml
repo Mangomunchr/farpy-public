@@ -1,60 +1,34 @@
 name: farpy-deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-
-concurrency:
-  group: farpy-deploy
-  cancel-in-progress: true
-
-permissions:
-  contents: read
+  push:
+    branches: [ "main" ]
 
 jobs:
-  ship:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # Use your repo's public/ folder; we still ensure health.json exists
-      - name: Build public bundle from repo
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -d public || mkdir -p public
-          # (re)write a fresh health.json each deploy
-          date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
-          ls -l public
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Write SSH key from secret
-        shell: bash
+      - name: Install deps & build
         run: |
-          set -euo pipefail
-          umask 077
-          mkdir -p ~/.ssh
-          cat > ~/.ssh/id_ci <<'KEY'
-          ${{ secrets.SSH_KEY }}
-          KEY
-          chmod 600 ~/.ssh/id_ci
+          npm ci
+          npm run build
 
-      - name: Upload with SFTP (ForceCommand-safe)
-        shell: bash
-        env:
-          HOST: ${{ secrets.SSH_HOST }}
-          USER: ${{ secrets.SSH_USER }}
-        run: |
-          set -euo pipefail
-          printf "%s\n" \
-            "lcd public" \
-            "put -Pr *" \
-            "quit" \
-            | sftp -i ~/.ssh/id_ci -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new "$USER@$HOST"
-
-      - name: Verify over HTTP
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -sS https://api.farpy.com/public/README.txt | head -n1 || true
-          curl -sS https://api.farpy.com/public/health.json | head -n1
+      - name: Upload artifacts to server
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          ssh_private_key: ${{ secrets.SSH_KEY }}
+          local_path: build/*
+          remote_path: /opt/farpy/public
+          sftp_only: true
+          force_upload: true
