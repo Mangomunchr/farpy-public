@@ -1,41 +1,19 @@
-name: farpy-deploy
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [ "main" ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install deps & build
-        run: |
-          ls -lah
-          cat package.json | head -n 20
-          npm install
-          npm run build
-
-      - name: Ensure health.json exists
-        run: |
-          mkdir -p build
-          echo "{\"ok\":true,\"ts\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > build/health.json
-
-      - name: Upload artifacts to server
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-        with:
-          server: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          ssh_private_key: ${{ secrets.SSH_KEY }}
-          local_path: build/*
-          remote_path: /opt/farpy/public
-          sftp_only: true
-          force_upload: true
+- name: Install deps & build
+  working-directory: frontend
+  run: |
+    npm install
+    npm run build
+- name: Ensure health.json exists
+  run: |
+    mkdir -p frontend/build
+    echo "{\"ok\":true,\"ts\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > frontend/build/health.json
+- name: Upload artifacts to server
+  uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+  with:
+    server: ${{ secrets.SSH_HOST }}
+    username: ${{ secrets.SSH_USER }}
+    ssh_private_key: ${{ secrets.SSH_KEY }}
+    local_path: frontend/build/*
+    remote_path: /opt/farpy/public
+    sftp_only: true
+    force_upload: true
