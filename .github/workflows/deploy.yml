@@ -17,14 +17,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install deps & build
+      - name: Build (skip if no package.json)
         run: |
           ls -lah
           if [ -f package.json ]; then
             npm install
             npm run build
           else
-            echo "⚠️ No package.json found, skipping build"
+            echo "No package.json found -> shipping static build/ if present"
             mkdir -p build
           fi
 
@@ -33,18 +33,25 @@ jobs:
           mkdir -p build
           echo "{\"ok\":true,\"ts\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > build/health.json
 
+      - name: Prepare SSH key (from base64)
+        run: |
+          echo "${{ secrets.SSH_KEY_B64 }}" | base64 -d > id_ed25519
+          chmod 600 id_ed25519
+
       - name: Test SSH login
         run: |
-          echo "${{ secrets.SSH_KEY }}" > id_ed25519
-          chmod 600 id_ed25519
           ssh -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "ls -lah /opt/farpy/public"
 
-      - name: Upload artifacts to server
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
-        with:
-          server: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          ssh_private_key: ${{ secrets.SSH_KEY }}
-          local_path: build/*
-          remote_path: /opt/farpy/public
-          sftp_only: true
+      - name: Upload via SFTP (native client)
+        run: |
+          # create target dir and push recursively using OpenSSH sftp
+          cat > sftp.batch <<'EOF'
+          -mkdir /opt/farpy/public
+          put -r build/* /opt/farpy/public
+          EOF
+          sftp -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} < sftp.batch
+
+      - name: Verify live health.json
+        run: |
+          curl -sS https://api.farpy.com/public/health.json | tee result.json
+          grep '"ok":true' result.json
