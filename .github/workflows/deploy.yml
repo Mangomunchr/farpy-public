@@ -1,7 +1,6 @@
 name: farpy-deploy
 on: workflow_dispatch
 
-# stop duplicate runs spamming
 concurrency:
   group: farpy-deploy
   cancel-in-progress: true
@@ -19,6 +18,7 @@ jobs:
           rm -rf public && mkdir -p public
           date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
           echo "farpy public artifacts (auto-built)" > public/README.txt
+          ls -l public
 
       - name: Write SSH key from secret
         shell: bash
@@ -29,20 +29,26 @@ jobs:
           printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ci
           chmod 600 ~/.ssh/id_ci
 
-      - name: Upload via SFTP (ForceCommand-safe)
+      # ---- Simple, ForceCommand-safe upload ----
+      - name: Upload with scp over SFTP (-O)
         shell: bash
         run: |
           set -euo pipefail
-          # we are chrooted to /opt/farpy/public already; remote root is "/"
-          {
-            echo "lcd public"   # switch local dir to public/
-            echo "put -r *"     # push everything in public/ into remote "."
-            echo "ls -l"        # show what ended up there
-          } | sftp -b - \
-               -i ~/.ssh/id_ci \
-               -o IdentitiesOnly=yes \
-               -o StrictHostKeyChecking=accept-new \
-               "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
+          set -x
+          # show openssh version (for -O support)
+          ssh -V
+
+          # remote chroot is /opt/farpy/public, so ":" is the right place
+          scp -v -O \
+            -i ~/.ssh/id_ci \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=accept-new \
+            public/README.txt "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"
+          scp -v -O \
+            -i ~/.ssh/id_ci \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=accept-new \
+            public/health.json "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"
 
       - name: Verify over HTTP
         shell: bash
