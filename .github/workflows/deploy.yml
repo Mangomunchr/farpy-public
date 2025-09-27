@@ -29,22 +29,19 @@ jobs:
           printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ci
           chmod 600 ~/.ssh/id_ci
 
-      # NOTE: NO "-O" FLAG. Default scp uses SFTP on OpenSSH 9.x.
-      - name: Upload with scp (SFTP mode)
+      - name: Upload with SFTP (no shell, no legacy scp)
         shell: bash
         run: |
           set -euo pipefail
-          ssh -V
-          scp -v \
-            -i ~/.ssh/id_ci \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=accept-new \
-            public/README.txt "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"
-          scp -v \
-            -i ~/.ssh/id_ci \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=accept-new \
-            public/health.json "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:"
+          printf '%s\n' \
+            "put -p public/README.txt" \
+            "put -p public/health.json" \
+            "ls -l" \
+          | sftp -vv -b - \
+              -i ~/.ssh/id_ci \
+              -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=accept-new \
+              "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}"
 
       - name: Verify over HTTP
         shell: bash
