@@ -18,13 +18,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build tiny public bundle
+      # Use your repo's public/ folder; we still ensure health.json exists
+      - name: Build public bundle from repo
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf public && mkdir -p public
+          test -d public || mkdir -p public
+          # (re)write a fresh health.json each deploy
           date -u +"%Y-%m-%dT%H:%M:%SZ" | awk '{print "{\"ok\":true,\"ts\":\""$1"\"}"}' > public/health.json
-          echo "farpy public artifacts (auto-built)" > public/README.txt
           ls -l public
 
       - name: Write SSH key from secret
@@ -45,8 +46,6 @@ jobs:
           USER: ${{ secrets.SSH_USER }}
         run: |
           set -euo pipefail
-          # Your deploy key is forced to internal-sftp with -d /opt/farpy/public
-          # So just change LOCAL dir and push recursively.
           printf "%s\n" \
             "lcd public" \
             "put -Pr *" \
@@ -57,5 +56,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl -sS https://api.farpy.com/public/README.txt | head -n1
+          curl -sS https://api.farpy.com/public/README.txt | head -n1 || true
           curl -sS https://api.farpy.com/public/health.json | head -n1
