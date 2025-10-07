@@ -4,37 +4,41 @@ on:
   workflow_dispatch: {}
   push:
     paths:
-      - "payouts.csv"
+      - "payouts.csv"          # adjust if needed
 
 jobs:
-  push-payouts:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare SSH
-        env:
-          FARPY_SSH_KEY: ${{ secrets.FARPY_SSH_KEY }}
-          FARPY_HOST:    ${{ secrets.FARPY_HOST }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$FARPY_SSH_KEY" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          printf "Host farpy\n  HostName %s\n  User root\n  IdentityFile ~/.ssh/id_ed25519\n  StrictHostKeyChecking no\n" "$FARPY_HOST" > ~/.ssh/config
-
+      # Upload payouts.csv to the server
       - name: Upload payouts.csv
-        run: scp payouts.csv farpy:/opt/farpy/ops/payouts.csv
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.FARPY_HOST }}
+          username: root
+          key: ${{ secrets.FARPY_SSH_KEY }}
+          source: "payouts.csv"
+          target: "/opt/farpy/ops/"        # will place file at /opt/farpy/ops/payouts.csv
 
-      - name: Purge Cloudflare (ops URLs only)
+      # Purge only the two ops URLs at Cloudflare
+      - name: Purge Cloudflare (ops URLs)
         env:
           CF_TOKEN: ${{ secrets.CF_TOKEN }}
           CF_ZONE:  ${{ secrets.CF_ZONE }}
         run: |
           curl -fsS -X POST \
-            -H "Authorization: Bearer $CF_TOKEN" \
+            -H "Authorization: Bearer ${CF_TOKEN}" \
             -H "Content-Type: application/json" \
             --data '{"files":["https://farpy.com/api/ops-log","https://farpy.com/api/payouts.csv"]}' \
-            "https://api.cloudflare.com/client/v4/zones/$CF_ZONE/purge_cache"
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE}/purge_cache"
 
-      - name: Log deploy in ops log (server)
-        run: ssh farpy "farpy-ops log 'payouts updated via GH Actions: $GITHUB_SHA'"
+      # Log the deploy on the server
+      - name: Log deploy in ops log
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FARPY_HOST }}
+          username: root
+          key: ${{ secrets.FARPY_SSH_KEY }}
+          script: farpy-ops log "payouts updated via GH Actions: $GITHUB_SHA"
