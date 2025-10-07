@@ -1,16 +1,17 @@
 name: farpy-deploy
 
 on:
-  workflow_dispatch:
   push:
     branches: [ "main" ]
+    paths:
+      - "payouts.csv"   # adjust or remove if not needed
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -19,41 +20,25 @@ jobs:
 
       - name: Build (skip if no package.json)
         run: |
-          ls -lah
           if [ -f package.json ]; then
-            npm install
+            npm ci
             npm run build
           else
-            echo "No package.json found -> shipping static build/ if present"
             mkdir -p build
+            echo '{"ok":true,"ts":"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'" }' > build/health.json
           fi
-
-      - name: Ensure health.json exists
-        run: |
-          mkdir -p build
-          echo "{\"ok\":true,\"ts\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > build/health.json
 
       - name: Prepare SSH key (from base64)
         run: |
           echo "${{ secrets.SSH_KEY_B64 }}" | base64 -d > id_ed25519
           chmod 600 id_ed25519
 
-      - name: Test SSH login
-        run: |
-          ssh -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "ls -lah /opt/farpy/public"
-
       - name: Upload via SFTP (native client)
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
         run: |
-          # create target dir and push recursively using OpenSSH sftp
-          cat > sftp.batch <<'EOF'
-          -mkdir /opt/farpy/public
-          put -r build/* /opt/farpy/public
-          EOF
-          sftp -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} < sftp.batch
-
-    - name: Verify live health
-      run: |
-        code=$(curl -sS -o /dev/null -w "%{http_code}\n" "https://api.farpy.com/health?cb=$RANDOM")
-        test "$code" = "200"
-
-          grep '"ok":true' result.json
+          sftp -i id_ed25519 -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST <<'SFTP'
+          put -r build /opt/farpy/site/build
+          bye
+          SFTP
