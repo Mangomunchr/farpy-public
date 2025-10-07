@@ -1,10 +1,10 @@
-name: Push payouts + purge CF
+name: push-payouts
 
 on:
   workflow_dispatch: {}
   push:
     paths:
-      - "payouts.csv"          # adjust if needed
+      - "payouts.csv"
 
 jobs:
   deploy:
@@ -12,33 +12,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Upload payouts.csv to the server
-      - name: Upload payouts.csv
+      # Upload payouts.csv
+      - name: upload payouts.csv
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.FARPY_HOST }}
+          host:     ${{ secrets.FARPY_HOST }}
           username: root
-          key: ${{ secrets.FARPY_SSH_KEY }}
-          source: "payouts.csv"
-          target: "/opt/farpy/ops/"        # will place file at /opt/farpy/ops/payouts.csv
+          key:      ${{ secrets.FARPY_SSH_KEY }}
+          source:   "payouts.csv"
+          target:   "/opt/farpy/ops/"
 
       # Purge only the two ops URLs at Cloudflare
-      - name: Purge Cloudflare (ops URLs)
+      - name: purge Cloudflare (ops URLs)
         env:
           CF_TOKEN: ${{ secrets.CF_TOKEN }}
           CF_ZONE:  ${{ secrets.CF_ZONE }}
         run: |
-          curl -fsS -X POST \
+          curl -fsS -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE}/purge_cache" \
             -H "Authorization: Bearer ${CF_TOKEN}" \
             -H "Content-Type: application/json" \
-            --data '{"files":["https://farpy.com/api/ops-log","https://farpy.com/api/payouts.csv"]}' \
-            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE}/purge_cache"
+            --data '{"files":["https://farpy.com/api/ops-log","https://farpy.com/api/payouts.csv"]}'
 
-      # Log the deploy on the server
-      - name: Log deploy in ops log
+      # Log on the server
+      - name: log deploy on ops log
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.FARPY_HOST }}
+          host:     ${{ secrets.FARPY_HOST }}
           username: root
-          key: ${{ secrets.FARPY_SSH_KEY }}
-          script: farpy-ops log "payouts updated via GH Actions: $GITHUB_SHA"
+          key:      ${{ secrets.FARPY_SSH_KEY }}
+          script: |
+            farpy-ops log "payouts updated via GH Actions: $GITHUB_SHA"
