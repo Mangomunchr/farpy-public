@@ -31,7 +31,7 @@ jobs:
       - name: Ensure health.json exists
         run: |
           mkdir -p build
-          echo "{\"ok\":true,\"ts\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}" > build/health.json
+          echo "{\"ok\":true,\"ts\":\"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"}" > build/health.json
 
       - name: Prepare SSH key (from base64)
         run: |
@@ -51,10 +51,9 @@ jobs:
           EOF
           sftp -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} < sftp.batch
 
-- name: Verify live health
-  run: |
-    set -euo pipefail
-    code=$(curl -sS -o /dev/null -w "%{http_code}" "https://api.farpy.com/public/health.json?cb=$RANDOM")
-    echo "GET https://api.farpy.com/public/health.json -> $code"
-    test "$code" = "200"
-
+      - name: Verify live health
+        run: |
+          set -euxo pipefail
+          code=$(curl -sS -o /dev/null -w "%{http_code}" "https://api.farpy.com/public/health.json?cb=$RANDOM")
+          echo "GET https://api.farpy.com/public/health.json -> $code"
+          test "$code" = "200"
