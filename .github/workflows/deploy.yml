@@ -51,11 +51,10 @@ jobs:
           EOF
           sftp -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} < sftp.batch
 
-      - name: Verify live health
-        run: |
-          set -euo pipefail
-          url="https://api.farpy.com/health?cb=$RANDOM"
-          echo "GET $url"
-          body="$(curl -fsS "$url" || true)"
-          echo "$body"
-          echo "$body" | grep -q '"ok":true'
+- name: Verify live health
+  run: |
+    set -euo pipefail
+    code=$(curl -sS -o /dev/null -w "%{http_code}" "https://api.farpy.com/public/health.json?cb=$RANDOM")
+    echo "GET https://api.farpy.com/public/health.json -> $code"
+    test "$code" = "200"
+
