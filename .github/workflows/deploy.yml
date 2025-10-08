@@ -19,7 +19,7 @@ jobs:
 
       - name: Build (skip if no package.json)
         run: |
-          ls -lah
+          set -euxo pipefail
           if [ -f package.json ]; then
             npm ci
             npm run build
@@ -40,13 +40,14 @@ jobs:
 
       - name: Test SSH login
         run: |
-          ssh -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "ls -lah | head -n 3"
+          ssh -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} true
 
       - name: Upload via SFTP (native client)
         run: |
+          set -euxo pipefail
           cat > sftp.batch <<'EOF'
           -mkdir /opt/farpy/public
-          put -r build/* /opt/farpy/public
+          put -r build/ /opt/farpy/public
           EOF
           sftp -i id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} < sftp.batch
 
