@@ -52,5 +52,9 @@ jobs:
 
       - name: Verify live health
         run: |
-          code=$(curl -sS -o /dev/null -w "%{http_code}\n" "https://api.farpy.com/health?cb=$RANDOM")
-          test "$code" = "200"
+          set -euo pipefail
+          url="https://api.farpy.com/health?cb=$RANDOM"
+          echo "GET $url"
+          body="$(curl -fsS "$url" || true)"
+          echo "$body"
+          echo "$body" | grep -q '"ok":true'
