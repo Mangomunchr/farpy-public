@@ -1,4 +1,5 @@
-﻿export default function Page() {
+﻿import VibeToggle from "./components/VibeToggle";
+export default function Page() {
   return (
     <main>
       <section className="mx-auto max-w-6xl px-4 py-16">
@@ -14,7 +15,7 @@
         <div className="mt-8 flex gap-3">
           <a href="/join" className="btn-pill btn-primary shadow hover:shadow-lg transition">Render Now</a>
           <a href="/about" className="btn-pill btn-ghost hover:border-zinc-600 transition">About</a>
-        </div>
+        </div>`n<div className="mt-3"><VibeToggle /></div>
 
         <div className="mt-14 grid md:grid-cols-3 gap-6">
           {[
