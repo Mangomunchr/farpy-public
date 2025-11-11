@@ -1,5 +1,5 @@
 ﻿@import "tailwindcss";
 
-/* Dark baseline */
 :root { color-scheme: dark; }
-html { background-color: #000; }
+* { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+a:focus-visible, button:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }

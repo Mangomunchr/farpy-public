@@ -1,11 +1,8 @@
-export default function Page(){
+﻿export default function About() {
   return (
-    <div className='space-y-4'>
-      <h1 className='text-3xl font-bold'>About Farpy</h1>
-      <p>Farpy is a distributed GPU platform that makes rendering and AI accessible to everyone.</p>
-      <p>From the Garden to the Forest, powered by the Bazaar.</p>
-      <p>Built with ?? in LA + LV.</p>
-      <a className='px-4 py-2 rounded-xl border inline-block' href='/docs'>Read the docs</a>
-    </div>
+    <main className="mx-auto max-w-3xl px-4 py-16 space-y-4">
+      <h1 className="text-3xl font-bold">About Farpy</h1>
+      <p className="text-zinc-300">Distributed GPU power for everyone — simple for creators, reliable for operators.</p>
+    </main>
   );
 }

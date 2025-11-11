@@ -1,16 +1,16 @@
-export default function Page(){
+﻿export default function Join() {
   return (
-    <div className='grid md:grid-cols-2 gap-6'>
-      <div className='border rounded-2xl p-6'>
-        <div className='text-2xl font-bold'>For Farpies ??</div>
-        <p className='text-sm text-gray-600 mt-2'>Upload & chill. Login with Discord.</p>
-        <a className='inline-block mt-4 px-4 py-3 rounded-xl bg-farpyBlue text-white' href='/api/auth/discord'>Continue with Discord</a>
+    <main className="mx-auto max-w-3xl px-4 py-16">
+      <h1 className="text-3xl font-bold">Join Farpy</h1>
+      <p className="mt-4 text-zinc-300">Early access for Farpies (uploaders) and NodeMunchers (GPU operators).</p>
+      <ul className="mt-6 list-disc pl-6 text-zinc-300">
+        <li>Drop &amp; render files (Garden)</li>
+        <li>Spin up a node and earn (Bazaar)</li>
+      </ul>
+      <div className="mt-8 flex gap-3">
+        <a className="px-4 py-2 rounded-xl bg-white text-black font-medium" href="https://discord.gg/">Discord</a>
+        <a className="px-4 py-2 rounded-xl border border-zinc-800" href="mailto:hello@farpy.com">Email us</a>
       </div>
-      <div className='border rounded-2xl p-6' id='nodes'>
-        <div className='text-2xl font-bold'>For NodeMunchers ??</div>
-        <p className='text-sm text-gray-600 mt-2'>Run jobs & earn. Join the waitlist.</p>
-        <a className='inline-block mt-4 px-4 py-3 rounded-xl bg-farpyPink text-white' href='https://discord.gg/'>Join waitlist</a>
-      </div>
-    </div>
+    </main>
   );
 }
