@@ -9,11 +9,11 @@ export default function Page(){
   return (
     <div className='space-y-4'>
       <h1 className='text-3xl font-bold'>Live Status</h1>
-      {!s && <div className='text-sm text-gray-600'>Loading…</div>}
+      {!s && <div className='text-sm text-gray-600'>Loadingâ€¦</div>}
       {s && (
         <div className='grid md:grid-cols-3 gap-4'>
-          <div className='border rounded-2xl p-5'><div className='text-sm text-gray-500'>API uptime</div><div className='text-2xl font-bold'>{(s.api?.uptime??0).toFixed?.(2) ?? s.api?.uptime ?? '—'}%</div></div>
-          <div className='border rounded-2xl p-5'><div className='text-sm text-gray-500'>Job success</div><div className='text-2xl font-bold'>{(s.jobs?.success??0).toFixed?.(2) ?? s.jobs?.success ?? '—'}%</div></div>
+          <div className='border rounded-2xl p-5'><div className='text-sm text-gray-500'>API uptime</div><div className='text-2xl font-bold'>{(s.api?.uptime??0).toFixed?.(2) ?? s.api?.uptime ?? 'â€”'}%</div></div>
+          <div className='border rounded-2xl p-5'><div className='text-sm text-gray-500'>Job success</div><div className='text-2xl font-bold'>{(s.jobs?.success??0).toFixed?.(2) ?? s.jobs?.success ?? 'â€”'}%</div></div>
           <div className='border rounded-2xl p-5'><div className='text-sm text-gray-500'>Payout verification</div><div className='text-2xl font-bold'>{s.payout?.verified ? 'On' : 'Pending'}</div></div>
         </div>
       )}

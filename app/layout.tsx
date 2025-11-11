@@ -1,4 +1,4 @@
-export const metadata = { title: "Farpy — Distributed GPU power for everyone" };
+export const metadata = { title: "Farpy â€” Distributed GPU power for everyone" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="mx-auto max-w-6xl px-4 py-10">{children}</main>
         <footer className="border-t mt-16">
           <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-gray-500">
-            © 2025 Farpy — Tiny taps. Big compute.
+            Â© 2025 Farpy â€” Tiny taps. Big compute.
           </div>
         </footer>
       </body>
