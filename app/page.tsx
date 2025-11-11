@@ -1,4 +1,4 @@
-﻿import ChompySticker from "@/components/ChompySticker";
+﻿import ChompySticker from "@/components/ChompySticker"; import StatusBadge from "@/components/StatusBadge"; import ExplorerMini from "@/components/ExplorerMini";
 
 function Tile({title,desc}:{title:string;desc:string}) {
   return <div className="card-k"><div className="text-lg font-semibold mb-1">{title}</div><p className="text-sm text-[var(--fp-sub)]">{desc}</p></div>;
@@ -10,7 +10,7 @@ export default function Page(){
       {/* HERO */}
       <section className="section-k grid md:grid-cols-[1fr,220px] gap-8 items-center">
         <div>
-          <div className="chip mb-3">Distributed GPU power for everyone</div>
+          <div className="chip mb-1">Distributed GPU power for everyone</div><div className="mt-1 text-xs"><StatusBadge /></div>
           <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
             Tiny taps. <span className="bg-[var(--fp-primary)] px-2 rounded-xl">Big compute.</span>
           </h1>
@@ -62,7 +62,7 @@ export default function Page(){
             <li>Public status for transparency.</li>
           </ul>
         </div>
-      </section>
+      </section><section className="section-k"><div className="card-k mt-4"><ExplorerMini /></div></section>
 
       {/* PRICING TEASER */}
       <section className="section-k grid md:grid-cols-3 gap-4">
@@ -107,3 +107,6 @@ export default function Page(){
     </main>
   );
 }
+
+
+
