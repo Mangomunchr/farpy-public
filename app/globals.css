@@ -1,3 +1,9 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Farpy base */
+:root { color-scheme: dark; }
+html, body { height: 100%; }
+body { background:#0a0a0a; color:#e5e7eb; }
+a { text-decoration: none; }
