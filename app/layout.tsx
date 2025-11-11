@@ -6,13 +6,13 @@ export const metadata: Metadata = {
   description: "Tiny taps. Big compute. Drop, render, download.",
   metadataBase: new URL("https://farpy.com"),
   icons: { icon: "/favicon.ico" },
-  openGraph: {
+  openGraph: { 
     title: "Farpy — Distributed GPU power for everyone.",
     description: "Tiny taps. Big compute.",
     url: "https://farpy.com",
     siteName: "Farpy",
     type: "website"
-  },
+  , images: ["/icon.svg"] },
   twitter: {
     card: "summary_large_image",
     title: "Farpy — Distributed GPU power for everyone.",
@@ -53,3 +53,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
