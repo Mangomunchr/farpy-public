@@ -31,7 +31,7 @@
         </div>
       </section>
 
-      <section className="relative isolate mx-4 md:mx-auto md:max-w-6xl overflow-hidden rounded-3xl border border-zinc-800 my-12">
+      <section className="relative isolate mx-4 md:mx-auto md:max-w-6xl overflow-hidden rounded-3xl border border-zinc-800 my-12 glow">
         <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_120%_at_80%_-20%,rgba(255,180,220,.18),transparent_60%)]" />
         <div className="relative px-6 py-10 md:px-12 md:py-12">
           <h2 className="text-2xl md:text-3xl font-bold">Tap render. We’ll wake the GPUs.</h2>
