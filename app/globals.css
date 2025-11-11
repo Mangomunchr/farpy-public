@@ -1,12 +1,50 @@
 ﻿@import "tailwindcss";
-:root { color-scheme: dark; --fx-accent: 255 180 220; --fx-blue: 140 180 255; }
+
+/* Base */
+:root { color-scheme: dark; }
 html { background:#000; }
 body { font-family: var(--font-inter), var(--font-noto), ui-sans-serif, system-ui; }
 
-/* Cute accents */
+/* Components */
 .badge-soft{border-radius:9999px;border:1px solid rgb(24 24 27);padding:4px 10px;background:rgba(255,255,255,.03)}
 .card-soft{border-radius:20px;border:1px solid rgb(39 39 42);background:linear-gradient(180deg,rgba(255,255,255,.02),transparent)}
-.btn-pill{border-radius:9999px;padding:10px 16px;font-weight:600}
+.btn-pill{border-radius:9999px;padding:10px 16px;font-weight:700}
 .btn-primary{background:#fff;color:#000}
 .btn-ghost{border:1px solid rgb(63 63 70)}
-.glow{box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 10px 40px rgba(255,180,220,.10)}
+.glow{box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 10px 40px rgba(255,180,220,.12)}
+
+/* Vibes */
+.vibe-pro body { font-family: var(--font-inter), var(--font-noto), ui-sans-serif, system-ui; }
+
+/* CHAOS: neon pastel + playful fonts */
+.vibe-chaos body { 
+  font-family: var(--font-comic), var(--font-bungee), ui-sans-serif, system-ui;
+  letter-spacing: .2px;
+}
+.vibe-chaos .btn-primary { 
+  background: linear-gradient(90deg, #ff90e8, #ffc857, #8ab4ff);
+  color:#000; 
+  box-shadow: 0 8px 30px rgba(255,144,232,.35);
+}
+.vibe-chaos .btn-ghost { 
+  border:1px dashed rgba(255,255,255,.4);
+  background: rgba(255,255,255,.04);
+}
+.vibe-chaos .card-soft {
+  border-radius:24px;
+  border-color: rgba(255,255,255,.18);
+  background:
+    radial-gradient(120% 80% at 10% -10%, rgba(255,144,232,.20), transparent 60%),
+    radial-gradient(120% 80% at 110% 10%, rgba(138,180,255,.20), transparent 60%),
+    rgba(255,255,255,.02);
+}
+.vibe-chaos h1, .vibe-chaos h2, .vibe-chaos h3 { 
+  font-family: var(--font-bungee), var(--font-comic), system-ui; 
+}
+/* subtle animated stripe for CTA */
+.vibe-chaos .cta-stripe::after{
+  content:"";
+  position:absolute; inset:0; pointer-events:none;
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,.07) 0 8px, transparent 8px 16px);
+  mask: linear-gradient(#000, transparent 70%);
+}
