@@ -1,11 +1,11 @@
-﻿export default function How() {
+﻿export default function Page(){
   return (
-    <main className="mx-auto max-w-3xl px-4 py-16 space-y-6">
-      <h1 className="text-3xl font-bold">How Farpy Works</h1>
+    <main className="mx-auto max-w-3xl px-4 py-16 space-y-4">
+      <h1 className="text-3xl font-bold">How Farpy works</h1>
       <ol className="list-decimal pl-6 text-zinc-300 space-y-2">
-        <li>Upload job → we chunk, hash, and queue it.</li>
-        <li>Nodes pick it up → compute runs in sandbox.</li>
-        <li>We verify outputs → you download; node gets paid.</li>
+        <li>Drop: upload your render/AI job.</li>
+        <li>Route: we send it to free GPUs.</li>
+        <li>Done: download; nodes get paid.</li>
       </ol>
     </main>
   );
