@@ -1,16 +1,17 @@
-﻿export const metadata = { title: "Join — Farpy" };
-import JoinForm from "./JoinForm";
-
-export default function Page() {
+﻿"use client";
+export default function Join(){
   return (
-    <main className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-3xl font-bold">Join Farpy (Early Access)</h1>
-      <p className="mt-2 text-zinc-400">Plug in via form or Discord. Waves go out weekly.</p>
-      <JoinForm />
-      <p className="mt-6 text-sm text-zinc-500">
-        Prefer Discord?{" "}
-        <a className="underline" href="https://discord.gg/v3g4V2GtzT" target="_blank" rel="noopener">Join Discord</a>.
-      </p>
+    <main className="section-k">
+      <h1 className="text-3xl font-bold">Join the waitlist</h1>
+      <p className="mt-2 text-[var(--fp-sub)]">We’ll ping you when seats open.</p>
+      <div className="mt-6 card-k">
+        <form action="mailto:hello@farpy.com" method="GET">
+          <label className="block text-sm font-medium">Email</label>
+          <input name="email" type="email" required className="mt-1 w-full rounded-xl border px-3 py-2" style="border-color:var(--fp-line)" placeholder="you@example.com" />
+          <button className="mt-4 btn-pill btn-primary" type="submit">Save my spot</button>
+        </form>
+        <p className="mt-3 text-xs text-[var(--fp-sub)]">No spam. Just launch news.</p>
+      </div>
     </main>
   );
 }

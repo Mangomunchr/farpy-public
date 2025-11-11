@@ -20,10 +20,10 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${typeof props!=="undefined"?"":""} ${notoKR.className} antialiased`}>
+      <body className={`${typeof props!=="undefined"?"":""} ${notoKR.className} antialiased`} className={`${typeof props!=="undefined"?"":""} ${notoKR.className} antialiased`}>
         <header className="border-b border-white/10">
           <nav className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
             <a href="/" className="font-bold">Farpy</a>
@@ -49,10 +49,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </footer>
-      </body>
+        <footer className="container-k py-10 text-xs text-[var(--fp-sub)] border-t" style="border-color:var(--fp-line)"><div className="flex flex-wrap gap-4 justify-between"><div>© Farpy. Tiny taps. Big compute.</div><div className="flex gap-4"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/press">Press</a></div></div></footer></body>
     </html>
   );
 }
+
 
 
 

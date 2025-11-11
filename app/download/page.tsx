@@ -1,11 +1,12 @@
-﻿export const metadata = { title: "Download — Farpy" };
-export default function Page() {
-  return (<main className="mx-auto max-w-3xl px-4 py-16">
-    <h1 className="text-3xl font-bold">Download</h1>
-    <p className="mt-3 text-zinc-400">Desktop + SDK coming with early access. For now, join the waitlist and we’ll ping you.</p>
-    <div className="mt-6 flex gap-3">
-      <a className="btn-pill btn-primary" href="/join">Join waitlist</a>
-      <a className="btn-pill" href="/how">How it works</a>
-    </div>
-  </main>);
+﻿export default function Download(){
+  return (
+    <main className="section-k">
+      <h1 className="text-3xl font-bold">Download</h1>
+      <div className="mt-6 grid md:grid-cols-3 gap-4">
+        <a className="card-k" href="#" aria-disabled="true"><div className="font-semibold">Windows</div><p className="text-sm text-[var(--fp-sub)]">Coming soon</p></a>
+        <a className="card-k" href="#" aria-disabled="true"><div className="font-semibold">macOS</div><p className="text-sm text-[var(--fp-sub)]">Coming soon</p></a>
+        <a className="card-k" href="#" aria-disabled="true"><div className="font-semibold">SDK / CLI</div><p className="text-sm text-[var(--fp-sub)]">Docs soon</p></a>
+      </div>
+    </main>
+  );
 }

@@ -1,13 +1,20 @@
-﻿export const metadata = { title: "How it works — Farpy" };
-export default function Page() {
-  return (<main className="mx-auto max-w-3xl px-4 py-16">
-    <h1 className="text-3xl font-bold">How Farpy works</h1>
-    <ol className="mt-6 space-y-4 list-decimal pl-6 text-zinc-300">
-      <li><b>Upload</b> — Drag files or connect a supported app.</li>
-      <li><b>Pick a preset</b> — Speed/quality to match your deadline.</li>
-      <li><b>Render</b> — Distributed GPUs crunch your job fast.</li>
-      <li><b>Download</b> — Results + proof packet (hashes, runtime, GPU).</li>
-    </ol>
-    <p className="mt-6 text-zinc-400">Pause/cancel anytime. You only pay for completed work.</p>
-  </main>);
+﻿export default function How(){
+  return (
+    <main className="section-k">
+      <h1 className="text-3xl font-bold">How Farpy works</h1>
+      <div className="mt-6 grid md:grid-cols-3 gap-4">
+        <div className="card-k"><div className="font-semibold">1) Drop</div><p className="text-sm text-[var(--fp-sub)]">Upload your scene, video, or AI task.</p></div>
+        <div className="card-k"><div className="font-semibold">2) Distribute</div><p className="text-sm text-[var(--fp-sub)]">We chunk and route work to trusted GPUs.</p></div>
+        <div className="card-k"><div className="font-semibold">3) Deliver</div><p className="text-sm text-[var(--fp-sub)]">Results come back verified and stitched.</p></div>
+      </div>
+      <div className="mt-6 card-k">
+        <div className="font-semibold">Trust & safety, in plain English</div>
+        <ul className="mt-2 text-sm text-[var(--fp-sub)] list-disc pl-5 space-y-2">
+          <li>Every job has a proof packet (hashes, runtime, node ID).</li>
+          <li>Payouts only after verified completion.</li>
+          <li>Abuse filters + sandboxed execution.</li>
+        </ul>
+      </div>
+    </main>
+  );
 }
