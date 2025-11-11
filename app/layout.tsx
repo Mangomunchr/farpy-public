@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   title: "Farpy — Distributed GPU power for everyone.",
   description: "Tiny taps. Big compute.",
   metadataBase: new URL("https://farpy.com"),
-  openGraph: { title: "Farpy — Distributed GPU power for everyone.", description: "Tiny taps. Big compute.", url: "https://farpy.com", images: ["/opengraph-image"] },
-  twitter: { card: "summary_large_image", title: "Farpy", description: "Distributed GPU power for everyone.", images: ["/opengraph-image"] },
+  openGraph: { title: "Farpy — Distributed GPU power for everyone.", description: "Tiny taps. Big compute.", url: "https://farpy.com", images: ["https://farpy.com/opengraph-image"] },
+  twitter: { card: "summary_large_image", title: "Farpy", description: "Distributed GPU power for everyone.", images: ["https://farpy.com/opengraph-image"] },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
