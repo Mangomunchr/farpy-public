@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-black text-zinc-200 antialiased">
+      <body className={`${typeof props!=="undefined"?"":""} ${notoKR.className} antialiased`}>
         <header className="border-b border-white/10">
           <nav className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
             <a href="/" className="font-bold">Farpy</a>
@@ -53,4 +53,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
+
 

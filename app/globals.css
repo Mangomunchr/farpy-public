@@ -1,55 +1,30 @@
-﻿@import "tailwindcss";
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Base */
-:root { color-scheme: dark; }
-html { background:#000; }
-body { font-family: var(--font-inter), var(--font-noto), ui-sans-serif, system-ui; }
+/* Cute palette */
+:root{
+  --fp-bg:#fffdfa;
+  --fp-ink:#1a1a1a;
+  --fp-sub:#6b7280;
+  --fp-primary:#ffd24d;   /* honey yellow */
+  --fp-accent:#ff86b3;    /* strawberry milk */
+  --fp-mint:#b7f0d6;      /* mint */
+  --fp-lav:#c9c2ff;       /* lavender */
+  --fp-line:rgba(0,0,0,0.06);
+}
 
-/* Components */
-.badge-soft{border-radius:9999px;border:1px solid rgb(24 24 27);padding:4px 10px;background:rgba(255,255,255,.03)}
-.card-soft{border-radius:20px;border:1px solid rgb(39 39 42);background:linear-gradient(180deg,rgba(255,255,255,.02),transparent)}
-.btn-pill{border-radius:9999px;padding:10px 16px;font-weight:700}
-.btn-primary{background:#fff;color:#000}
-.btn-ghost{border:1px solid rgb(63 63 70)}
-.glow{box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 10px 40px rgba(255,180,220,.12)}
+html,body{ background:var(--fp-bg); color:var(--fp-ink); }
 
-/* Vibes */
-.vibe-pro body { font-family: var(--font-inter), var(--font-noto), ui-sans-serif, system-ui; }
-
-/* CHAOS: neon pastel + playful fonts */
-.vibe-chaos body { 
-  font-family: var(--font-comic), var(--font-bungee), ui-sans-serif, system-ui;
-  letter-spacing: .2px;
+@layer components{
+  .btn-pill{
+    @apply inline-flex items-center rounded-full px-4 py-2 text-sm border border-[var(--fp-line)] shadow-sm hover:shadow transition;
+    background:#ffffff90; backdrop-filter:saturate(120%) blur(6px);
+  }
+  .btn-primary{
+    background:var(--fp-primary);
+    border-color:transparent;
+  }
+  .chip{ @apply inline-flex items-center rounded-full px-3 py-1 text-xs border border-[var(--fp-line)]; }
+  .card-k{ @apply rounded-2xl border border-[var(--fp-line)] shadow-sm p-6 bg-white; }
 }
-.vibe-chaos .btn-primary { 
-  background: linear-gradient(90deg, #ff90e8, #ffc857, #8ab4ff);
-  color:#000; 
-  box-shadow: 0 8px 30px rgba(255,144,232,.35);
-}
-.vibe-chaos .btn-ghost { 
-  border:1px dashed rgba(255,255,255,.4);
-  background: rgba(255,255,255,.04);
-}
-.vibe-chaos .card-soft {
-  border-radius:24px;
-  border-color: rgba(255,255,255,.18);
-  background:
-    radial-gradient(120% 80% at 10% -10%, rgba(255,144,232,.20), transparent 60%),
-    radial-gradient(120% 80% at 110% 10%, rgba(138,180,255,.20), transparent 60%),
-    rgba(255,255,255,.02);
-}
-.vibe-chaos h1, .vibe-chaos h2, .vibe-chaos h3 { 
-  font-family: var(--font-bungee), var(--font-comic), system-ui; 
-}
-/* subtle animated stripe for CTA */
-.vibe-chaos .cta-stripe::after{
-  content:"";
-  position:absolute; inset:0; pointer-events:none;
-  background: repeating-linear-gradient(135deg, rgba(255,255,255,.07) 0 8px, transparent 8px 16px);
-  mask: linear-gradient(#000, transparent 70%);
-}/* --- Vibe themes --- */
-:root.vibe-pro {}
-:root.vibe-chaos { --fx-accent: 255 120 200; }
-.vibe-chaos h1 { text-shadow: 0 0 8px rgba(255,120,200,.45), 0 0 20px rgba(140,180,255,.35); }
-.vibe-chaos .btn-primary { background-image: linear-gradient(90deg, #fff 0%, #ffe3f5 100%); }
-.vibe-chaos .card-soft { border-color: rgb(255 120 200 / .35); }
