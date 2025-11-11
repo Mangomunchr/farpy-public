@@ -21,5 +21,11 @@ export default function VibeToggle() {
     apply(next);
   }, []);
 
-  return <a className="ml-auto hover:text-white cursor-pointer" onClick={onClick}>🎛️ Vibe</a>;
+  return (
+    <button
+      onClick={onClick}
+      className="ml-auto px-3 py-1 rounded-full text-xs border border-zinc-700/70 hover:border-zinc-500 shadow-[0_0_12px_rgba(255,120,200,.15)]">
+      🎛️ Vibe
+    </button>
+  );
 }

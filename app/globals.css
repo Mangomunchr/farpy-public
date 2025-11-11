@@ -47,4 +47,9 @@ body { font-family: var(--font-inter), var(--font-noto), ui-sans-serif, system-u
   position:absolute; inset:0; pointer-events:none;
   background: repeating-linear-gradient(135deg, rgba(255,255,255,.07) 0 8px, transparent 8px 16px);
   mask: linear-gradient(#000, transparent 70%);
-}
+}/* --- Vibe themes --- */
+:root.vibe-pro {}
+:root.vibe-chaos { --fx-accent: 255 120 200; }
+.vibe-chaos h1 { text-shadow: 0 0 8px rgba(255,120,200,.45), 0 0 20px rgba(140,180,255,.35); }
+.vibe-chaos .btn-primary { background-image: linear-gradient(90deg, #fff 0%, #ffe3f5 100%); }
+.vibe-chaos .card-soft { border-color: rgb(255 120 200 / .35); }
