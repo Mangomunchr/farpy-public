@@ -1,9 +1,5 @@
-﻿@tailwind base;
-@tailwind components;
-@tailwind utilities;
+﻿@import "tailwindcss";
 
-/* Farpy base */
+/* Dark baseline */
 :root { color-scheme: dark; }
-html, body { height: 100%; }
-body { background:#0a0a0a; color:#e5e7eb; }
-a { text-decoration: none; }
+html { background-color: #000; }
