@@ -18,3 +18,13 @@ Pricing: https://api.farpy.com/v1/pricing
 Limits: https://api.farpy.com/v1/limits
 BenchMork: https://farpy.com/benchmark
 Research: https://farpy.com/labs/research
+
+## Agent discovery
+
+Official MCP Registry: https://registry.modelcontextprotocol.io/
+Smithery: https://smithery.ai/servers/mangomunchr/farpy
+Glama: https://glama.ai/mcp/servers
+PulseMCP: https://www.pulsemcp.com/servers
+
+Agent manifest: https://farpy.com/agents.json
+LLM context: https://farpy.com/llms.txt
