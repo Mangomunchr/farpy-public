@@ -2,7 +2,7 @@
 
 **Verified GPU compute for humans, applications, and agents.**
 
-FARPY accepts bounded GPU workloads, executes them asynchronously, delivers the completed artifact, and issues a verifiable execution receipt.
+FARPY accepts bounded GPU workloads, executes them asynchronously, delivers completed artifacts, and issues verifiable execution receipts.
 
 ## Public workload
 
@@ -14,12 +14,12 @@ Current public contract:
 - Input: `.blend`
 - Execution: asynchronous
 - Output: downloadable artifact
-- Integrity: SHA-256
-- Evidence: signed FARPY execution receipt
-- Transparency: public receipt inclusion proof
+- Integrity: SHA-256 artifact verification
+- Evidence: FARPY execution receipt
+- Transparency: public proof surfaces
 - Status: `LIVE_PUBLIC_ALPHA`
 
-Octane, video encoding, and other GPU workloads are not currently public.
+Additional workloads are under development and are not currently public.
 
 ## Agent / API access
 
@@ -56,4 +56,4 @@ Typical lifecycle:
 
 FARPY is currently a public-alpha service.
 
-Public capabilities, pricing, and limits are authoritative. Historical research and internally proven workloads do not imply current public availability.
+Public capabilities, pricing, and limits are authoritative. Historical research, internal tests, and experimental workloads do not imply current public availability.
