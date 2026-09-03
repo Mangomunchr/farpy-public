@@ -39,7 +39,7 @@ Typical lifecycle:
 
 - Official MCP Registry: https://registry.modelcontextprotocol.io/
 - Smithery: https://smithery.ai/servers/mangomunchr/farpy
-- Glama: https://glama.ai/mcp/servers
+- Glama: https://glama.ai/mcp/servers/Mangomunchr/farpy-public
 - PulseMCP: https://www.pulsemcp.com/servers
 - Agent manifest: https://farpy.com/agents.json
 - LLM context: https://farpy.com/llms.txt
@@ -54,7 +54,11 @@ Typical lifecycle:
 
 ## Local MCP / Glama
 
-A stdio MCP server for local clients (Cursor, Claude Desktop, Glama) lives in [`mcp/`](mcp/). It is a thin public client over FARPY's existing Job API. It does not include production server code and never logs `FARPY_AGENT_TOKEN`.
+A local stdio MCP server for Cursor, Claude Desktop, Glama, and other MCP clients lives in [`mcp/`](mcp/).
+
+It is a thin public client over FARPY's existing Job API. It does not include production server code and never logs `FARPY_AGENT_TOKEN`.
+
+### Build and run
 
 ```bash
 cd mcp
