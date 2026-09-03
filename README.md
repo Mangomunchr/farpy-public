@@ -52,6 +52,41 @@ Typical lifecycle:
 - Research: https://farpy.com/labs/research
 - Security: [SECURITY.md](SECURITY.md)
 
+## Local MCP / Glama
+
+A stdio MCP server for local clients (Cursor, Claude Desktop, Glama) lives in [`mcp/`](mcp/). It is a thin public client over FARPY's existing Job API. It does not include production server code and never logs `FARPY_AGENT_TOKEN`.
+
+```bash
+cd mcp
+npm install
+npm run build
+npm test
+node dist/mcp-server.js
+```
+
+Environment (see `.env.example`):
+
+- `FARPY_AGENT_TOKEN` — Job API `farpy_agent_` key. Required for every tool. The server fails closed if it is missing.
+- `FARPY_API_BASE` — API origin. Default: `https://api.farpy.com`
+
+Example local client config:
+
+```json
+{
+  "mcpServers": {
+    "farpy": {
+      "command": "node",
+      "args": ["/absolute/path/to/farpy-public/mcp/dist/mcp-server.js"],
+      "env": {
+        "FARPY_AGENT_TOKEN": "farpy_agent_..."
+      }
+    }
+  }
+}
+```
+
+Public MCP V1 tools: `inspect`, `quote`, `start`, `status`, `download`, `receipt`. `inspect` and `quote` do not spend. `start` is the spend boundary and requires `legal_acceptance=FARPY_LEGAL_V1`.
+
 ## Scope
 
 FARPY is currently a public-alpha service.

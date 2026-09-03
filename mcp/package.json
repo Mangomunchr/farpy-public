@@ -1,0 +1,31 @@
+{
+  "name": "farpy-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Local stdio MCP server for the FARPY public Job API",
+  "main": "dist/mcp-server.js",
+  "bin": {
+    "farpy-mcp": "dist/mcp-server.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/mcp-server.js",
+    "test": "npm run build && tsx --test tests/tool-schema.test.ts tests/auth-redaction.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.26",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.3"
+  }
+}
