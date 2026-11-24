@@ -9,7 +9,6 @@ FARPY accepts bounded GPU workloads, executes them asynchronously, delivers comp
 **Blender Cycles GPU rendering — $0.01 per completed frame.**
 
 Current public contract:
-
 - Workload: Blender Cycles GPU
 - Input: `.blend`
 - Execution: asynchronous
@@ -25,7 +24,7 @@ Additional workloads are under development and are not currently public.
 
 - MCP: https://api.farpy.com/mcp
 - API: https://api.farpy.com/v1
-- OpenAPI 3.1: https://farpy.com/openapi.json
+- OpenAPI 3.1: https://api.farpy.com/openapi.json
 - Quickstart: https://farpy.com/api/quickstart/
 - Capabilities: https://api.farpy.com/v1/capabilities
 - Pricing: https://api.farpy.com/v1/pricing
@@ -47,14 +46,14 @@ Typical lifecycle:
 ## Public surfaces
 
 - Website: https://farpy.com
-- Proof: https://farpy.com/proof/
-- BenchMork: https://farpy.com/benchmark
+- Proof: https://farpy.com/proof
+- BenchMark: https://farpy.com/benchmark
 - Research: https://farpy.com/labs/research
-- Security: [SECURITY.md](SECURITY.md)
+- Security: SECURITY.md
 
 ## Local MCP / Glama
 
-A local stdio MCP server for Cursor, Claude Desktop, Glama, and other MCP clients lives in [`mcp/`](mcp/).
+A local stdio MCP server for Cursor, Claude Desktop, Glama, and other MCP clients lives in `mcp/`.
 
 It is a thin public client over FARPY's existing Job API. It does not include production server code and never logs `FARPY_AGENT_TOKEN`.
 
@@ -66,33 +65,3 @@ npm install
 npm run build
 npm test
 node dist/mcp-server.js
-```
-
-Environment (see `.env.example`):
-
-- `FARPY_AGENT_TOKEN` — Job API `farpy_agent_` key. Required for every tool. The server fails closed if it is missing.
-- `FARPY_API_BASE` — API origin. Default: `https://api.farpy.com`
-
-Example local client config:
-
-```json
-{
-  "mcpServers": {
-    "farpy": {
-      "command": "node",
-      "args": ["/absolute/path/to/farpy-public/mcp/dist/mcp-server.js"],
-      "env": {
-        "FARPY_AGENT_TOKEN": "farpy_agent_..."
-      }
-    }
-  }
-}
-```
-
-Public MCP V1 tools: `inspect`, `quote`, `start`, `status`, `download`, `receipt`. `inspect` and `quote` do not spend. `start` is the spend boundary and requires `legal_acceptance=FARPY_LEGAL_V1`.
-
-## Scope
-
-FARPY is currently a public-alpha service.
-
-Public capabilities, pricing, and limits are authoritative. Historical research, internal tests, and experimental workloads do not imply current public availability.
